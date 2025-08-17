@@ -46,10 +46,10 @@ public class UserInfm implements UserDetails {
     private Integer loginFailedCnt; // Login Failed Count
     private String actYn;         // Active Yes/No (Y/N)
     private String regId;         // Register ID
-    private LocalDateTime lstLgnDtm; // Last Login DateTime
-    private LocalDateTime regDtm;     // Register DateTime
+    private String lstLgnDtm; // Last Login DateTime
+    private String regDtm;     // Register DateTime
     private String modId;         // Modify ID
-    private LocalDateTime modDtm;     // Modify DateTime
+    private String modDtm;     // Modify DateTime
 
     @Enumerated(EnumType.STRING)
     private Role role;

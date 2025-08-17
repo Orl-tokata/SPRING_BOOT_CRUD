@@ -20,6 +20,7 @@ import com.fullstack.dto.ApiResponse;
 import com.fullstack.exception.RecordNotFoundException;
 import com.fullstack.model.UserInfm;
 import com.fullstack.repository.UserRepository;
+import com.fullstack.util.DateTimeUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,156 +40,156 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/create")
-    @Operation(summary = "Create a new user", description = "Creates a new user record in the database")
-    public ResponseEntity<ApiResponse<UserInfm>> createUser(@RequestBody UserCreateRequest request) {
-        try {
-            // Check if userId already exists
-            if (userRepository.findByUserId(request.getUserId()).isPresent()) {
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponse<>(400, "User ID already exists", null));
-            }
-            // Check if email already exists
-            if (userRepository.findByEml(request.getEml()).isPresent()) {
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponse<>(400, "Email already exists", null));
-            }
-            LocalDateTime now = LocalDateTime.now();
-            var user = UserInfm.builder()
-                    .userId(request.getUserId())
-                    .userNm(request.getUserNm())
-                    .userPwd(passwordEncoder.encode(request.getUserPwd()))
-                    .eml(request.getEml())
-                    .tel(request.getTel())
-                    .usrImg(request.getUsrImg() != null ? request.getUsrImg() : "")
-                    .role(request.getRole() != null ? request.getRole() : com.fullstack.model.Role.USER)
-                    .lockYn("N")
-                    .loginFailedCnt(0)
-                    .actYn("Y")
-                    .regId(request.getRegId() != null ? request.getRegId() : request.getUserId())
-                    .regDtm(now)
-                    .modId(request.getModId() != null ? request.getModId() : request.getUserId())
-                    .modDtm(now)
-                    .build();
-            UserInfm savedUser = userRepository.save(user);
-            return ResponseEntity.ok(new ApiResponse<>(200, "User created successfully", savedUser));
-        } catch (Exception e) {
-            log.error("Error creating user: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @PostMapping("/create")
+    // @Operation(summary = "Create a new user", description = "Creates a new user record in the database")
+    // public ResponseEntity<ApiResponse<UserInfm>> createUser(@RequestBody UserCreateRequest request) {
+    //     try {
+    //         // Check if userId already exists
+    //         if (userRepository.findByUserId(request.getUserId()).isPresent()) {
+    //             return ResponseEntity.badRequest()
+    //                     .body(new ApiResponse<>(400, "User ID already exists", null));
+    //         }
+    //         // Check if email already exists
+    //         if (userRepository.findByEml(request.getEml()).isPresent()) {
+    //             return ResponseEntity.badRequest()
+    //                     .body(new ApiResponse<>(400, "Email already exists", null));
+    //         }
+    //         LocalDateTime now = LocalDateTime.now();
+    //         var user = UserInfm.builder()
+    //                 .userId(request.getUserId())
+    //                 .userNm(request.getUserNm())
+    //                 .userPwd(passwordEncoder.encode(request.getUserPwd()))
+    //                 .eml(request.getEml())
+    //                 .tel(request.getTel())
+    //                 .usrImg(request.getUsrImg() != null ? request.getUsrImg() : "")
+    //                 .role(request.getRole() != null ? request.getRole() : com.fullstack.model.Role.USER)
+    //                 .lockYn("N")
+    //                 .loginFailedCnt(0)
+    //                 .actYn("Y")
+    //                 .regId(request.getRegId() != null ? request.getRegId() : request.getUserId())
+    //                 .regDtm(DateTimeUtil.formatDefault(now))
+    //                 .modId(request.getModId() != null ? request.getModId() : request.getUserId())
+    //                 .modDtm(DateTimeUtil.formatDefault(now))
+    //                 .build();
+    //         UserInfm savedUser = userRepository.save(user);
+    //         return ResponseEntity.ok(new ApiResponse<>(200, "User created successfully", savedUser));
+    //     } catch (Exception e) {
+    //         log.error("Error creating user: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
 
-    @GetMapping("/findbyid/{id}")
-    @Operation(summary = "Find user by ID", description = "Retrieves a user by their ID")
-    public ResponseEntity<ApiResponse<UserInfm>> findById(@PathVariable Long id) {
-        try {
-            Optional<UserInfm> user = userRepository.findById(id);
-            if (user.isPresent()) {
-                return ResponseEntity.ok(new ApiResponse<>(200, "User found", user.get()));
-            } else {
-                return ResponseEntity.status(404)
-                        .body(new ApiResponse<>(404, "User not found with ID: " + id, null));
-            }
-        } catch (Exception e) {
-            log.error("Error finding user: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @GetMapping("/findbyid/{id}")
+    // @Operation(summary = "Find user by ID", description = "Retrieves a user by their ID")
+    // public ResponseEntity<ApiResponse<UserInfm>> findById(@PathVariable Long id) {
+    //     try {
+    //         Optional<UserInfm> user = userRepository.findById(id);
+    //         if (user.isPresent()) {
+    //             return ResponseEntity.ok(new ApiResponse<>(200, "User found", user.get()));
+    //         } else {
+    //             return ResponseEntity.status(404)
+    //                     .body(new ApiResponse<>(404, "User not found with ID: " + id, null));
+    //         }
+    //     } catch (Exception e) {
+    //         log.error("Error finding user: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
     
-    @GetMapping("/findbyuserid/{userId}")
-    @Operation(summary = "Find user by userId", description = "Retrieves a user by their userId")
-    public ResponseEntity<ApiResponse<UserInfm>> findByUserId(@PathVariable String userId) {
-        try {
-            Optional<UserInfm> user = userRepository.findByUserId(userId);
-            if (user.isPresent()) {
-                return ResponseEntity.ok(new ApiResponse<>(200, "User found", user.get()));
-            } else {
-                return ResponseEntity.status(404)
-                        .body(new ApiResponse<>(404, "User not found with userId: " + userId, null));
-            }
-        } catch (Exception e) {
-            log.error("Error finding user: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @GetMapping("/findbyuserid/{userId}")
+    // @Operation(summary = "Find user by userId", description = "Retrieves a user by their userId")
+    // public ResponseEntity<ApiResponse<UserInfm>> findByUserId(@PathVariable String userId) {
+    //     try {
+    //         Optional<UserInfm> user = userRepository.findByUserId(userId);
+    //         if (user.isPresent()) {
+    //             return ResponseEntity.ok(new ApiResponse<>(200, "User found", user.get()));
+    //         } else {
+    //             return ResponseEntity.status(404)
+    //                     .body(new ApiResponse<>(404, "User not found with userId: " + userId, null));
+    //         }
+    //     } catch (Exception e) {
+    //         log.error("Error finding user: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
 
-    @GetMapping("/findall")
-    @Operation(summary = "Get all users", description = "Retrieves all users from the database")
-    public ResponseEntity<ApiResponse<List<UserInfm>>> findAll() {
-        try {
-            List<UserInfm> users = userRepository.findAll();
-            return ResponseEntity.ok(new ApiResponse<>(200, "Users retrieved successfully", users));
-        } catch (Exception e) {
-            log.error("Error retrieving users: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @GetMapping("/findall")
+    // @Operation(summary = "Get all users", description = "Retrieves all users from the database")
+    // public ResponseEntity<ApiResponse<List<UserInfm>>> findAll() {
+    //     try {
+    //         List<UserInfm> users = userRepository.findAll();
+    //         return ResponseEntity.ok(new ApiResponse<>(200, "Users retrieved successfully", users));
+    //     } catch (Exception e) {
+    //         log.error("Error retrieving users: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
 
-    @PutMapping("/update/{id}")
-    @Operation(summary = "Update user", description = "Updates an existing user record")
-    public ResponseEntity<ApiResponse<UserInfm>> update(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
-        try {
-            UserInfm existingUser = userRepository.findById(id)
-                    .orElseThrow(() -> new RecordNotFoundException("User with ID " + id + " does not exist"));
-            // Check if new userId conflicts with existing user (if userId is being changed)
-            if (request.getUserId() != null && !request.getUserId().equals(existingUser.getUserId())) {
-                if (userRepository.findByUserId(request.getUserId()).isPresent()) {
-                    return ResponseEntity.badRequest()
-                            .body(new ApiResponse<>(400, "User ID already exists", null));
-                }
-            }
-            // Check if new email conflicts with existing user (if email is being changed)
-            if (request.getEml() != null && !request.getEml().equals(existingUser.getEml())) {
-                if (userRepository.findByEml(request.getEml()).isPresent()) {
-                    return ResponseEntity.badRequest()
-                            .body(new ApiResponse<>(400, "Email already exists", null));
-                }
-            }
-            // Update fields
-            if (request.getUserId() != null) existingUser.setUserId(request.getUserId());
-            if (request.getUserNm() != null) existingUser.setUserNm(request.getUserNm());
-            if (request.getUserPwd() != null) existingUser.setUserPwd(passwordEncoder.encode(request.getUserPwd()));
-            if (request.getEml() != null) existingUser.setEml(request.getEml());
-            if (request.getTel() != null) existingUser.setTel(request.getTel());
-            if (request.getUsrImg() != null) existingUser.setUsrImg(request.getUsrImg());
-            if (request.getRole() != null) existingUser.setRole(request.getRole());
-            if (request.getLockYn() != null) existingUser.setLockYn(request.getLockYn());
-            if (request.getActYn() != null) existingUser.setActYn(request.getActYn());
-            // Update modification info
-            existingUser.setModId(request.getModId() != null ? request.getModId() : existingUser.getUserId());
-            existingUser.setModDtm(LocalDateTime.now());
-            UserInfm updatedUser = userRepository.save(existingUser);
-            return ResponseEntity.ok(new ApiResponse<>(200, "User updated successfully", updatedUser));
-        } catch (RecordNotFoundException e) {
-            return ResponseEntity.status(404)
-                    .body(new ApiResponse<>(404, e.getMessage(), null));
-        } catch (Exception e) {
-            log.error("Error updating user: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @PutMapping("/update/{id}")
+    // @Operation(summary = "Update user", description = "Updates an existing user record")
+    // public ResponseEntity<ApiResponse<UserInfm>> update(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
+    //     try {
+    //         UserInfm existingUser = userRepository.findById(id)
+    //                 .orElseThrow(() -> new RecordNotFoundException("User with ID " + id + " does not exist"));
+    //         // Check if new userId conflicts with existing user (if userId is being changed)
+    //         if (request.getUserId() != null && !request.getUserId().equals(existingUser.getUserId())) {
+    //             if (userRepository.findByUserId(request.getUserId()).isPresent()) {
+    //                 return ResponseEntity.badRequest()
+    //                         .body(new ApiResponse<>(400, "User ID already exists", null));
+    //             }
+    //         }
+    //         // Check if new email conflicts with existing user (if email is being changed)
+    //         if (request.getEml() != null && !request.getEml().equals(existingUser.getEml())) {
+    //             if (userRepository.findByEml(request.getEml()).isPresent()) {
+    //                 return ResponseEntity.badRequest()
+    //                         .body(new ApiResponse<>(400, "Email already exists", null));
+    //             }
+    //         }
+    //         // Update fields
+    //         if (request.getUserId() != null) existingUser.setUserId(request.getUserId());
+    //         if (request.getUserNm() != null) existingUser.setUserNm(request.getUserNm());
+    //         if (request.getUserPwd() != null) existingUser.setUserPwd(passwordEncoder.encode(request.getUserPwd()));
+    //         if (request.getEml() != null) existingUser.setEml(request.getEml());
+    //         if (request.getTel() != null) existingUser.setTel(request.getTel());
+    //         if (request.getUsrImg() != null) existingUser.setUsrImg(request.getUsrImg());
+    //         if (request.getRole() != null) existingUser.setRole(request.getRole());
+    //         if (request.getLockYn() != null) existingUser.setLockYn(request.getLockYn());
+    //         if (request.getActYn() != null) existingUser.setActYn(request.getActYn());
+    //         // Update modification info
+    //         existingUser.setModId(request.getModId() != null ? request.getModId() : existingUser.getUserId());
+    //         existingUser.setModDtm(DateTimeUtil.formatDefault(LocalDateTime.now()));
+    //         UserInfm updatedUser = userRepository.save(existingUser);
+    //         return ResponseEntity.ok(new ApiResponse<>(200, "User updated successfully", updatedUser));
+    //     } catch (RecordNotFoundException e) {
+    //         return ResponseEntity.status(404)
+    //                 .body(new ApiResponse<>(404, e.getMessage(), null));
+    //     } catch (Exception e) {
+    //         log.error("Error updating user: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
 
-    @DeleteMapping("/delete/{id}")
-    @Operation(summary = "Delete user", description = "Deletes a user by their ID")
-    public ResponseEntity<ApiResponse<String>> deleteById(@PathVariable Long id) {
-        try {
-            if (!userRepository.existsById(id)) {
-                return ResponseEntity.status(404)
-                        .body(new ApiResponse<>(404, "User not found with ID: " + id, null));
-            }
-            userRepository.deleteById(id);
-            return ResponseEntity.ok(new ApiResponse<>(200, "User deleted successfully", null));
-        } catch (Exception e) {
-            log.error("Error deleting user: ", e);
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
-        }
-    }
+    // @DeleteMapping("/delete/{id}")
+    // @Operation(summary = "Delete user", description = "Deletes a user by their ID")
+    // public ResponseEntity<ApiResponse<String>> deleteById(@PathVariable Long id) {
+    //     try {
+    //         if (!userRepository.existsById(id)) {
+    //             return ResponseEntity.status(404)
+    //                     .body(new ApiResponse<>(404, "User not found with ID: " + id, null));
+    //         }
+    //         userRepository.deleteById(id);
+    //         return ResponseEntity.ok(new ApiResponse<>(200, "User deleted successfully", null));
+    //     } catch (Exception e) {
+    //         log.error("Error deleting user: ", e);
+    //         return ResponseEntity.status(500)
+    //                 .body(new ApiResponse<>(500, "Internal server error: " + e.getMessage(), null));
+    //     }
+    // }
     
 }
 

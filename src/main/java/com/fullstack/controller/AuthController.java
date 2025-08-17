@@ -16,6 +16,7 @@ import com.fullstack.model.Role;
 import com.fullstack.model.UserInfm;
 import com.fullstack.repository.UserRepository;
 import com.fullstack.security.JwtService;
+import com.fullstack.util.DateTimeUtil;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -71,15 +72,14 @@ public class AuthController {
                 .loginFailedCnt(0)
                 .actYn("Y")
                 .regId(request.getUserId())
-                .regDtm(now)
+                .regDtm(DateTimeUtil.formatDefault(now))
                 .modId(request.getUserId())
-                .modDtm(now)
+                .modDtm(DateTimeUtil.formatDefault(now))
                 .build();
         userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+        jwtService.generateToken(user);
         System.out.println("User registered successfully: " + request.getUserId());
-        return ResponseEntity.ok(new ApiResponse<>(200, "User registered successfully",
-                AuthResponse.builder().token(jwtToken).message("User registered successfully").build()));
+        return ResponseEntity.ok(new ApiResponse<>(200, "User registered successfully",null));
         } catch (Exception e) {
             System.err.println("Error during registration: " + e.getMessage());
             e.printStackTrace();
@@ -123,7 +123,7 @@ public class AuthController {
             var userOptional = userRepository.findByUserId(request.getUserId());
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(401).body(
-                        new ApiResponse<>(401, "Incorrect userId or password", null)
+                        new ApiResponse<>(401, "The User is not found!", null)
                 );
             }
             
@@ -146,7 +146,7 @@ public class AuthController {
             
             // Successful login: reset attempts and update last login time
             user.resetFailedLoginAttempts();
-            user.setLstLgnDtm(LocalDateTime.now());
+            user.setLstLgnDtm(DateTimeUtil.formatDefault(LocalDateTime.now()));
             userRepository.save(user);
             var jwtToken = jwtService.generateToken(user);
             return ResponseEntity.ok(new ApiResponse<>(200, "Login successful",
